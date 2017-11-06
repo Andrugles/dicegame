@@ -106,7 +106,67 @@ namespace Server
 
                     Console.WriteLine("Number of ready players: " + rdy + " of " + id_list.Count);
                     
-                    
+                    if (rdy == id_list.Count) //If everyone is ready
+                    {
+                        start = true;
+                        data = "\nGame has started!\nWait for your turn, and then type \"!roll\" to roll your lucky number!";
+                        
+                        playersInGame = id_list.Count; //Stores number of players in game in variable "playersInGame"
+                        Console.WriteLine("Players in game: " + playersInGame);
+                        Console.WriteLine("Players connected to server: " + id_list.Count);
+                        rdy = 0;
+                    }
+                    else rdy = 0;
+                }
+
+                //Becomes true if the player writes "!roll"
+                if (data == "Player " + id + " says: " + "!roll" && start && playingPosition <= playersInGame)
+                {
+                    if (turn == playingPosition)
+                    {
+                        int roll = randomNum.Next(1, 7); //Stores a random number from 1-6 in int roll
+                        rollPoints += roll; //Stores the sum of points from rolls in "rollPoints"
+                        rollCount++; //Keeps track of number of rolls for each player
+                        data = "\nPlayer " + id + " rolled: " + roll + " and has a total of " + rollPoints + " points";
+                        rollPoints_list.Add(rollPoints);
+                        if (playingPosition != id_list.Count - (id_list.Count - playersInGame) && playingPosition <= playersInGame) //If current player is not the last player:
+                            turn++;
+                        else if (playingPosition == id_list.Count-(id_list.Count - playersInGame) && rollCount == 3 && playingPosition <= playersInGame) //If current player is the last player and it's the last turn:
+                        {
+                            data = "Player " + id + " rolled: " + roll + " and has " + rollPoints + " points";
+                                Broadcast(data);
+                               
+
+                                //Deciding winner of the game
+                                for (int i = 0; i < rollPoints_list.Count - 1; i++) {
+                                    if (rollPoints_list[i + 1] >= winnerPoints)
+                                    {
+                                        if (rollPoints_list[i + 1] == winnerPoints)
+                                            draw = true;
+                                        if (rollPoints_list[i + 1] != winnerPoints)
+                                            draw = false;
+                                        if (draw) data = "Draw";
+
+                                        winnerPoints = rollPoints_list[i + 1];
+                                        winner = (int)id_list[(i+1) % id_list.Count];
+                                    }
+                                        
+                                }
+                                if(!draw)
+                                data = "\nGame ended! The game winner is: Player " + winner + " with " + winnerPoints + " points\nCongratulations!\nType \"!ready\" to begin a new match!";
+
+                                //Resets game lobby
+                                for (int i = 0; i < id_list.Count; i++)
+                                    ready_list[i] = false;
+                                start = draw = false;
+                                turn = 1;
+                                winner = winnerPoints = playersJoined = 0;
+
+
+                        } else turn = 1; //If current player is the last player and it's not the last turn (starts new round)
+                    }
+                    else data = "\nWait for your turn, player " + id + "..."; //If player tries to roll when it's not his turn
+                }
                     
         
             public static void Broadcast(string data) //Broadcast method sends data to all clients
