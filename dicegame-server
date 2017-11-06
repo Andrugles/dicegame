@@ -1,0 +1,63 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+
+namespace Server
+{
+    class Program
+    {
+        //Declaring variables for handling clients
+        static readonly object _lock = new object();
+        static readonly Dictionary<int, TcpClient> list_clients = new Dictionary<int, TcpClient>();
+        static int count = 1;
+        static ArrayList id_list = new ArrayList();
+        static ArrayList disconnects = new ArrayList();
+
+        //Declaring variables for managing gameplay
+        static Random randomNum = new Random();
+        static List<bool> ready_list = new List<bool>();
+        static List<int> rollPoints_list = new List<int>();
+        static bool start = false, draw = false;
+        static int playersInGame = 0, playersJoined = 0, rdy = 0, winnerPoints = 0, turn = 1;
+
+        static void Main(string[] args)
+        {
+            //Setting up and starting server socket
+            TcpListener ServerSocket = new TcpListener(IPAddress.Any, 5000); //
+            ServerSocket.Start();
+
+            //Make the server always be ready to accept connections
+            while (true)
+            {
+                TcpClient client = ServerSocket.AcceptTcpClient();
+                lock (_lock) list_clients.Add(count, client);
+
+                //Creates a new thread for each connected client
+                Thread thread = new Thread(clientManagement);
+                thread.Start(count);
+                count++;
+            }
+        }
+        
+        
+        
+            public static void Broadcast(string data) //Broadcast method sends data to all clients
+        {
+            byte[] buffer = Encoding.ASCII.GetBytes(data + Environment.NewLine);
+
+            lock (_lock)
+            {
+                foreach (TcpClient client in list_clients.Values)
+                {
+                    NetworkStream stream = client.GetStream();
+
+                    stream.Write(buffer, 0, buffer.Length);
+                }
+            }
+        }
+    }
+}    
