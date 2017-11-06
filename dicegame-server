@@ -43,7 +43,71 @@ namespace Server
             }
         }
         
-        
+        //Code for managing clients and gameplay
+        public static void clientManagement(object _count)
+        {
+            int id = (int)_count; //Associates each client with a unique ID number
+            bool boolId = false;
+            TcpClient client;
+
+            Console.WriteLine("Player " + id + " connected");
+            //Adds ID numbers to lists
+            id_list.Add(id);
+            ready_list.Add(boolId);
+
+            //Declares variables for gameplay use
+            int position = id_list.Count;
+            int playingPosition = 0, rollPoints = 0, rollCount = 0, winner = 0;
+            //Console.WriteLine("Initial position of " + id + " is " + position); //Uncomment to see position in ArrayList id_list
+
+            lock (_lock) client = list_clients[id];
+
+            while (true)
+            {   //Gets input stream from client and stores the data in a byte package of size buffer
+                NetworkStream stream = client.GetStream();
+                byte[] buffer = new byte[1024];
+                int byte_count = stream.Read(buffer, 0, buffer.Length);
+
+                if (byte_count == 0) //If package is empty, break the while-loop
+                {
+                    break;
+                }
+
+                //Sets data equal to "Player says: " + the input gotten from the client as a string
+                string data = "Player " + id + " says: " + Encoding.ASCII.GetString(buffer, 0, byte_count);
+
+                //Becomes true if the client writes "!ready"
+                if (data == "Player " + id + " says: " + "!ready" && !start)
+                {
+                    if (ready_list[position - 1]) //Becomes true if player is currently ready
+                    {
+                        data = "Player " + id + " is not ready!";
+                        ready_list[position - 1] = false; //Sets the player as not ready
+                        playersJoined--;
+                    }
+
+                    else //If player is not currently ready:
+                    {
+                        playersJoined++;
+                        playingPosition = playersJoined;
+
+                        //Prepares new match by resetting points
+                        rollPoints_list.Clear();
+                        rollCount = 0;
+                        rollPoints = 0;
+
+                        data = "Player " + id + " is ready!";
+
+                        ready_list[position - 1] = true; //Sets the player as ready
+                    }
+
+                    for(int i = 0; i < ready_list.Count; i++)
+                        if (ready_list[i]) rdy++; //Counts number of ready players
+
+                    Console.WriteLine("Number of ready players: " + rdy + " of " + id_list.Count);
+                    
+                    
+                    
         
             public static void Broadcast(string data) //Broadcast method sends data to all clients
         {
