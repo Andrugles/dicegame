@@ -167,7 +167,7 @@ namespace Server
                     }
                     else data = "\nWait for your turn, player " + id + "..."; //If player tries to roll when it's not his turn
                 }
-             else if (data == "Player " + id + " says: " + "!roll" && !start) //If player types "!roll" when not everyone is ready
+                else if (data == "Player " + id + " says: " + "!roll" && !start) //If player types "!roll" when not everyone is ready
                 {
                     int notRdy = 0;
                     for (int i = 0; i<id_list.Count; i++)
@@ -190,7 +190,6 @@ namespace Server
             client.Client.Shutdown(SocketShutdown.Both);
             client.Close();
             Console.WriteLine("Player " + id + " disconnected");
-
 
             //Resets game lobby after a client has disconnected
             string dataDc = "Game ended because a player left the match... \nType \"!ready\" to begin a new match!";
@@ -219,7 +218,7 @@ namespace Server
             //}
         }       
         
-            public static void Broadcast(string data) //Broadcast method sends data to all clients
+        public static void Broadcast(string data) //Broadcast method sends data to all clients
         {
             byte[] buffer = Encoding.ASCII.GetBytes(data + Environment.NewLine);
 
