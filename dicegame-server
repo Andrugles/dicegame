@@ -167,7 +167,57 @@ namespace Server
                     }
                     else data = "\nWait for your turn, player " + id + "..."; //If player tries to roll when it's not his turn
                 }
-                    
+             else if (data == "Player " + id + " says: " + "!roll" && !start) //If player types "!roll" when not everyone is ready
+                {
+                    int notRdy = 0;
+                    for (int i = 0; i<id_list.Count; i++)
+                    {
+                        if (!ready_list[i])
+                        {
+                            notRdy++; //Counts how many players are not ready
+                            data = "\nWaiting for " + notRdy + " player(s)";
+                        }
+                    }
+                    notRdy = 0;
+                }
+
+                Broadcast(data); //Calls Broadcast method
+                Console.WriteLine(data);
+            }
+
+            //Closes connection to client
+            lock (_lock) list_clients.Remove(id);
+            client.Client.Shutdown(SocketShutdown.Both);
+            client.Close();
+            Console.WriteLine("Player " + id + " disconnected");
+
+
+            //Resets game lobby after a client has disconnected
+            string dataDc = "Game ended because a player left the match... \nType \"!ready\" to begin a new match!";
+            Broadcast(dataDc);
+            for (int i = 0; i < id_list.Count; i++)
+                ready_list[i] = false;
+            start = draw = false;
+            turn = 1;
+            winner = winnerPoints = playersJoined = 0;
+
+            //Counts number of disconnected clients
+            for (int i = 0; i < disconnects.Count; i++)
+            {
+                if ((int)disconnects[i] < position) //Checks how many of the disconnected clients had a lower numbered position than the client disconnecting
+                    position--; //Decreases the position number by 1 for each disconnected client with a lower numbered position than the client disconnecting
+            }
+
+            //Adds the calculated position of the client upon disconnecting and removes its ID number from id_list
+            disconnects.Add(position);
+            id_list.RemoveAt(position - 1);
+
+            //Console.WriteLine("\nCurrent players connected: "); //Uncomment to see list of current players connected when a player disconnects
+            //for (int i = 0; i < id_list.Count; i++)
+            //{
+            //    Console.WriteLine(id_list[i]);
+            //}
+        }       
         
             public static void Broadcast(string data) //Broadcast method sends data to all clients
         {
